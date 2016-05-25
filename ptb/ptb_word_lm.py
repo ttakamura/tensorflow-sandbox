@@ -66,10 +66,9 @@ from tensorflow.models.rnn.ptb import reader
 flags = tf.flags
 logging = tf.logging
 
-flags.DEFINE_string(
-    "model", "small",
-    "A type of model. Possible options are: small, medium, large.")
-flags.DEFINE_string("data_path", None, "data_path")
+flags.DEFINE_string("model", "small", "A type of model. Possible options are: small, medium, large.")
+flags.DEFINE_string("data_path",  None, "training data_path")
+flags.DEFINE_string("model_path", None, "restore model_path")
 
 FLAGS = flags.FLAGS
 
@@ -126,6 +125,7 @@ class PTBModel(object):
     softmax_w = tf.get_variable("softmax_w", [size, vocab_size])
     softmax_b = tf.get_variable("softmax_b", [vocab_size])
     logits = tf.matmul(output, softmax_w) + softmax_b
+    self.logits = logits
     loss = tf.nn.seq2seq.sequence_loss_by_example(
         [logits],
         [tf.reshape(self._targets, [-1])],
@@ -184,7 +184,7 @@ class SmallConfig(object):
   num_steps = 20
   hidden_size = 200
   max_epoch = 4
-  max_max_epoch = 13
+  max_max_epoch = 5
   keep_prob = 1.0
   lr_decay = 0.5
   batch_size = 20
@@ -300,20 +300,32 @@ def main(_):
 
     tf.initialize_all_variables().run()
 
-    for i in range(config.max_max_epoch):
-      lr_decay = config.lr_decay ** max(i - config.max_epoch, 0.0)
-      m.assign_lr(session, config.learning_rate * lr_decay)
+    saver = tf.train.Saver()
 
-      print("Epoch: %d Learning rate: %.3f" % (i + 1, session.run(m.lr)))
-      train_perplexity = run_epoch(session, m, train_data, m.train_op,
-                                   verbose=True)
-      print("Epoch: %d Train Perplexity: %.3f" % (i + 1, train_perplexity))
-      valid_perplexity = run_epoch(session, mvalid, valid_data, tf.no_op())
-      print("Epoch: %d Valid Perplexity: %.3f" % (i + 1, valid_perplexity))
+    if (FLAGS.model_path):
+      saver.restore(session, FLAGS.model_path)
+      print("Restored!!")
+      from IPython import embed
+      embed()
 
-    test_perplexity = run_epoch(session, mtest, test_data, tf.no_op())
-    print("Test Perplexity: %.3f" % test_perplexity)
+    else:
+      for i in range(config.max_max_epoch):
+        lr_decay = config.lr_decay ** max(i - config.max_epoch, 0.0)
+        m.assign_lr(session, config.learning_rate * lr_decay)
 
+        print("Epoch: %d Learning rate: %.3f" % (i + 1, session.run(m.lr)))
+        train_perplexity = run_epoch(session, m, train_data, m.train_op,
+                                     verbose=True)
+        print("Epoch: %d Train Perplexity: %.3f" % (i + 1, train_perplexity))
+        valid_perplexity = run_epoch(session, mvalid, valid_data, tf.no_op())
+        print("Epoch: %d Valid Perplexity: %.3f" % (i + 1, valid_perplexity))
+
+        # Save the variables to disk.
+        save_path = saver.save(session, "models/ptb/model.ckpt")
+        print("Model saved in file: %s" % save_path)
+
+      test_perplexity = run_epoch(session, mtest, test_data, tf.no_op())
+      print("Test Perplexity: %.3f" % test_perplexity)
 
 if __name__ == "__main__":
   tf.app.run()
