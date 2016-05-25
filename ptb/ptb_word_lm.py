@@ -61,7 +61,7 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.models.rnn.ptb import reader
+import reader
 
 flags = tf.flags
 logging = tf.logging
@@ -184,7 +184,7 @@ class SmallConfig(object):
   num_steps = 20
   hidden_size = 200
   max_epoch = 4
-  max_max_epoch = 5
+  max_max_epoch = 13
   keep_prob = 1.0
   lr_decay = 0.5
   batch_size = 20
@@ -239,7 +239,7 @@ class TestConfig(object):
   vocab_size = 10000
 
 
-def run_epoch(session, m, data, eval_op, verbose=False):
+def run_epoch(session, m, data, eval_op, verbose=False, id_to_word=None):
   """Runs the model on the given data."""
   epoch_size = ((len(data) // m.batch_size) - 1) // m.num_steps
   start_time = time.time()
@@ -248,10 +248,20 @@ def run_epoch(session, m, data, eval_op, verbose=False):
   state = m.initial_state.eval()
   for step, (x, y) in enumerate(reader.ptb_iterator(data, m.batch_size,
                                                     m.num_steps)):
-    cost, state, _ = session.run([m.cost, m.final_state, eval_op],
-                                 {m.input_data: x,
-                                  m.targets: y,
-                                  m.initial_state: state})
+    cost, state, _, logits = session.run([m.cost, m.final_state, eval_op, m.logits],
+                                         {m.input_data: x,
+                                          m.targets: y,
+                                          m.initial_state: state})
+
+    if (id_to_word):
+      print("========================================")
+      for i in xrange(m.num_steps):
+        stp  = i + 0
+        word = id_to_word[logits[stp,:].argmax()]
+        print(word, end=" ")
+      print(" ")
+      print(" ")
+
     costs += cost
     iters += m.num_steps
 
@@ -282,7 +292,8 @@ def main(_):
     raise ValueError("Must set --data_path to PTB data directory")
 
   raw_data = reader.ptb_raw_data(FLAGS.data_path)
-  train_data, valid_data, test_data, _ = raw_data
+  train_data, valid_data, test_data, vocab_num, word_to_id = raw_data
+  id_to_word = {v: k for k, v in word_to_id.items()}
 
   config = get_config()
   eval_config = get_config()
@@ -312,17 +323,19 @@ def main(_):
       for i in range(config.max_max_epoch):
         lr_decay = config.lr_decay ** max(i - config.max_epoch, 0.0)
         m.assign_lr(session, config.learning_rate * lr_decay)
-
         print("Epoch: %d Learning rate: %.3f" % (i + 1, session.run(m.lr)))
+
         train_perplexity = run_epoch(session, m, train_data, m.train_op,
                                      verbose=True)
         print("Epoch: %d Train Perplexity: %.3f" % (i + 1, train_perplexity))
-        valid_perplexity = run_epoch(session, mvalid, valid_data, tf.no_op())
+
+        valid_perplexity = run_epoch(session, mvalid, valid_data, tf.no_op(),
+                                     id_to_word=id_to_word)
         print("Epoch: %d Valid Perplexity: %.3f" % (i + 1, valid_perplexity))
 
         # Save the variables to disk.
-        save_path = saver.save(session, "models/ptb/model.ckpt")
-        print("Model saved in file: %s" % save_path)
+        #save_path = saver.save(session, "models/ptb/model.ckpt")
+        #print("Model saved in file: %s" % save_path)
 
       test_perplexity = run_epoch(session, mtest, test_data, tf.no_op())
       print("Test Perplexity: %.3f" % test_perplexity)
