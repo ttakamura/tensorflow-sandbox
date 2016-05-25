@@ -26,41 +26,44 @@ def generate_data(batch_size):
 
 batch_size = 10
 
-x     = tf.placeholder(tf.float32, shape=[None, 15])
-t     = tf.placeholder(tf.float32, shape=[None, 4])
-w1    = tf.Variable(tf.truncated_normal([15, 4], stddev=0.1))
-b1    = tf.Variable(tf.constant(0.1, shape=[4]))
-model = tf.matmul(x, w1) + b1
-y     = tf.nn.softmax(model)
-top_y = tf.argmax(y,1)
+with tf.Graph().as_default():
+    x     = tf.placeholder(tf.float32, shape=[None, 15])
+    t     = tf.placeholder(tf.float32, shape=[None, 4])
+    w1    = tf.Variable(tf.truncated_normal([15, 4], stddev=0.1))
+    b1    = tf.Variable(tf.constant(0.1, shape=[4]))
+    model = tf.matmul(x, w1) + b1
+    y     = tf.nn.softmax(model)
+    top_y = tf.argmax(y,1)
 
-cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, t)
-loss          = tf.reduce_mean(cross_entropy)
-train         = tf.train.AdamOptimizer(0.01).minimize(loss)
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, t)
+    loss          = tf.reduce_mean(cross_entropy, name='loss')
+    global_step   = tf.Variable(0, name='global_step', trainable=False)
+    train         = tf.train.AdamOptimizer(0.01).minimize(loss, global_step=global_step)
 
-correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(t, 1))
-accuracy           = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(t, 1))
+    accuracy           = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-with tf.Session() as sess:
-    sess.run(tf.initialize_all_variables())
+    with tf.Session() as sess:
+        sess.run(tf.initialize_all_variables())
 
-    for step in xrange(40):
-        # ---- train ---------------------------------------
-        for i in xrange(5):
-            x_data, x_teach = generate_data(batch_size)
-            train.run(feed_dict={ x: x_data, t: x_teach })
+        for step in xrange(40):
+            # ---- train ---------------------------------------
+            for i in xrange(5):
+                x_data, x_teach = generate_data(batch_size)
+                train.run(feed_dict={ x: x_data, t: x_teach })
+                tf.scalar_summary(loss.op.name, loss)
 
-        # ---- confirm--------------------------------------
-        x_data, x_teach = generate_data(batch_size * 10)
+            # ---- confirm--------------------------------------
+            x_data, x_teach = generate_data(batch_size * 10)
 
-        acc = accuracy.eval(feed_dict={ x: x_data, t: x_teach })
-        print("step %d, accuracy %g -------------" % (step, acc))
-        # print(x_teach.argmax(1))
-        # print(top_y.eval(feed_dict={ x: x_data, t: x_teach }))
+            acc = accuracy.eval(feed_dict={ x: x_data, t: x_teach })
+            print("step %d, accuracy %g -------------" % (step, acc))
+            # print(x_teach.argmax(1))
+            # print(top_y.eval(feed_dict={ x: x_data, t: x_teach }))
 
-        if (acc > 0.99):
-            tmp_w = w1.eval()
-            tmp_w[tmp_w < 0.0] = 0.0
-            for i in xrange(15):
-                print(i+1, tmp_w[i,:])
-            # print(b1.eval())
+            if (acc > 0.99):
+                tmp_w = w1.eval()
+                tmp_w[tmp_w < 0.0] = 0.0
+                for i in xrange(15):
+                    print(i+1, tmp_w[i,:])
+                # print(b1.eval())
