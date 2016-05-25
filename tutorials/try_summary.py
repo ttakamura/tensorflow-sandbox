@@ -37,33 +37,39 @@ with tf.Graph().as_default():
 
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, t)
     loss          = tf.reduce_mean(cross_entropy, name='loss')
+    tf.scalar_summary(loss.op.name, loss)
     global_step   = tf.Variable(0, name='global_step', trainable=False)
     train         = tf.train.AdamOptimizer(0.01).minimize(loss, global_step=global_step)
 
     correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(t, 1))
     accuracy           = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+    summary_op         = tf.merge_all_summaries()
 
     with tf.Session() as sess:
+        run_name = str(randint(1000))
+        summary_writer = tf.train.SummaryWriter('data/fizz_buzz/' + run_name, sess.graph)
         sess.run(tf.initialize_all_variables())
 
-        for step in xrange(40):
+        for step in xrange(200):
             # ---- train ---------------------------------------
-            for i in xrange(5):
-                x_data, x_teach = generate_data(batch_size)
-                train.run(feed_dict={ x: x_data, t: x_teach })
-                tf.scalar_summary(loss.op.name, loss)
+            x_data, x_teach = generate_data(batch_size)
+            train.run(feed_dict={ x: x_data, t: x_teach })
 
             # ---- confirm--------------------------------------
-            x_data, x_teach = generate_data(batch_size * 10)
+            if (step % 10 == 0):
+                x_data, x_teach = generate_data(batch_size * 10)
+                acc = accuracy.eval(feed_dict={ x: x_data, t: x_teach })
+                print("step %d, accuracy %g -------------" % (step, acc))
+                # print(x_teach.argmax(1))
+                # print(top_y.eval(feed_dict={ x: x_data, t: x_teach }))
 
-            acc = accuracy.eval(feed_dict={ x: x_data, t: x_teach })
-            print("step %d, accuracy %g -------------" % (step, acc))
-            # print(x_teach.argmax(1))
-            # print(top_y.eval(feed_dict={ x: x_data, t: x_teach }))
+                summary_str = sess.run(summary_op, feed_dict={ x: x_data, t: x_teach })
+                summary_writer.add_summary(summary_str, step)
+                summary_writer.flush()
 
-            if (acc > 0.99):
-                tmp_w = w1.eval()
-                tmp_w[tmp_w < 0.0] = 0.0
-                for i in xrange(15):
-                    print(i+1, tmp_w[i,:])
-                # print(b1.eval())
+            # if (acc > 0.99):
+            #     tmp_w = w1.eval()
+            #     tmp_w[tmp_w < 0.0] = 0.0
+            #     for i in xrange(15):
+            #         print(i+1, tmp_w[i,:])
+            #     # print(b1.eval())
