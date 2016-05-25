@@ -27,12 +27,12 @@ def generate_data(batch_size):
 batch_size = 10
 
 with tf.Graph().as_default():
-    x     = tf.placeholder(tf.float32, shape=[None, 15])
-    t     = tf.placeholder(tf.float32, shape=[None, 4])
-    w1    = tf.Variable(tf.truncated_normal([15, 4], stddev=0.1))
-    b1    = tf.Variable(tf.constant(0.1, shape=[4]))
+    x     = tf.placeholder(tf.float32, shape=[None, 15], name='X')
+    t     = tf.placeholder(tf.float32, shape=[None, 4],  name='T')
+    w1    = tf.Variable(tf.truncated_normal([15, 4], stddev=0.1), name='W1')
+    b1    = tf.Variable(tf.constant(0.1, shape=[4]), name='b1')
     model = tf.matmul(x, w1) + b1
-    y     = tf.nn.softmax(model)
+    y     = tf.nn.softmax(model, name='Y')
     top_y = tf.argmax(y,1)
 
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, t)
