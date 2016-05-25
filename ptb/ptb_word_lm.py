@@ -258,7 +258,7 @@ def run_epoch(session, m, data, eval_op, verbose=False, id_to_word=None):
       for i in xrange(m.num_steps):
         stp  = i + 0
         word = id_to_word[logits[stp,:].argmax()]
-        print(word, end=" ")
+        print(word.replace("<eos>", "\n"), end=" ")
       print(" ")
       print(" ")
 
