@@ -46,6 +46,10 @@ with tf.Graph().as_default():
     y     = tf.nn.softmax(model, name='Y')
     top_y = tf.argmax(y,1)
 
+    # -------------------- debug ----------------------------------------------
+    tf.histogram_summary('activation', model)
+    tf.image_summary('weights', tf.reshape(w1, [-1, 15, 4, 1]))
+
     # -------------------- train -----------------------------------------------
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(y, t)
     loss          = tf.reduce_mean(cross_entropy, name='loss')
@@ -83,9 +87,11 @@ with tf.Graph().as_default():
                 summary_writer.flush()
                 time.sleep(1)
 
-            # if (acc > 0.99):
-            #     tmp_w = w1.eval()
-            #     tmp_w[tmp_w < 0.0] = 0.0
-            #     for i in xrange(15):
-            #         print(i+1, tmp_w[i,:])
-            #     # print(b1.eval())
+            if (step % 90 == 0):
+                print("            Number       FizzBuzz     Buzz         Fizz")
+                print("-------------------------------------------------------")
+                tmp_w = w1.eval()
+                tmp_w[tmp_w < 0.0] = 0.0
+                for i in xrange(15):
+                    print(i+1, tmp_w[i,:])
+                # print(b1.eval())
