@@ -13,16 +13,13 @@ require 'thread'
   Thread.start do
     loop do
       cmd = @queue.pop
-      puts cmd
+      # puts cmd
       system(cmd)
     end
   end
 end
 
 DATA_DIR = 'data/tab_products/images'
-
-def fetch product
-end
 
 products = {}
 
@@ -39,7 +36,8 @@ products.map do |key, prod|
   @queue << "curl -s '#{prod[:url]}' > #{DATA_DIR}/#{prod[:id]}.jpg"
 end
 
-unless @queue.empty?
+until @queue.empty?
+  p @queue.size
   sleep 1
 end
 
@@ -47,5 +45,5 @@ end
 # 下記コマンドなどで縮小する
 #
 # rsync -a data/tab_products/images/ data/tab_products/images_s/
-# mogrify -quality 98 -resize 50 data/tab_products/images_s/*jpg
+# mogrify -quality 98 -type Grayscale -resize 60 data/tab_products/images_s/*jpg
 #
