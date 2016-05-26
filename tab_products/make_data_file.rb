@@ -30,7 +30,7 @@ results = []
 Dir.glob("#{data_dir}/*jpg").each do |file|
   id = file.split("/").last.gsub(".jpg","")
   if products[id]
-    results << [products[id][:categories][1], products[id][:categories][2], file].join("\t")
+    results << [products[id][:categories][1], products[id][:categories][2], id].join("\t")
   end
 end
 
