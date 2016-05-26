@@ -45,5 +45,5 @@ end
 # 下記コマンドなどで縮小する
 #
 # rsync -a data/tab_products/images/ data/tab_products/images_s/
-# mogrify -quality 98 -type Grayscale -resize 60 data/tab_products/images_s/*jpg
+# mogrify -quality 98 -type Grayscale -resize 50 data/tab_products/images_s/*jpg
 #
