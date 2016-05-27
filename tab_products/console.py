@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import tensorflow as tf
 import conf
@@ -7,7 +8,7 @@ import trainer
 from IPython import embed
 
 data_dir     = "data/tab_products/images_ss"
-log_dir      = "log/tab_products/current"
+log_dir      = ("log/tab_products/%s" % int(time.time()))
 batch_size   = 20   # min-batch size
 img_width    = 48   # original image width
 img_height   = 48   # original image height
@@ -35,20 +36,21 @@ with tf.Session(conf.remote_host_uri()) as sess:
 
   # embed()
 
-  for step in xrange(100):
+  step = 0
+  for epoch in xrange(100):
     for i in xrange(len(train)):
+      step += 1
       train_data = reader.feed_dict(data_dir, train[i], 0.5, images, labels, dropout_ratio)
       sess.run(train_opt, feed_dict=train_data)
 
-      #if (i % 500 == 0):
-      #  summary_str = sess.run(summary_op, feed_dict=train_data)
-      #  summary_writer.add_summary(summary_str)
-      #  summary_writer.flush()
+      if (step % 100 == 0):
+        train_summary = sess.run(summary_op, feed_dict=train_data)
+        summary_writer.add_summary(train_summary, step)
 
-    valid_data = reader.feed_dict(data_dir, valid, 1.0, images, labels, dropout_ratio)
-    acc_score  = sess.run(accuracy, feed_dict=valid_data)
-    print("step %d, accuracy %g" % (step, acc_score))
+        valid_data = reader.feed_dict(data_dir, valid, 1.0, images, labels, dropout_ratio)
+        acc_score  = sess.run(accuracy, feed_dict=valid_data)
+        print("step %d, accuracy %g" % (step, acc_score))
 
-    summary_str = sess.run(summary_op, feed_dict=train_data)
-    summary_writer.add_summary(summary_str, step)
-    summary_writer.flush()
+        validate_summary = sess.run(summary_op, feed_dict=valid_data)
+        summary_writer.add_summary(validate_summary, step)
+        summary_writer.flush()
