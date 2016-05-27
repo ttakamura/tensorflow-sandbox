@@ -30,7 +30,8 @@ def load_images(dir_path, batch):
     results = []
     for id in batch[:,2]:
         img = np.array(Image.open("%s/%s.jpg" % (dir_path, id)).convert("L"), 'f')
-        results.append(img)
+        w, h = img.shape
+        results.append(img.reshape((w, h, 1)))
     results = np.array(results) / 255.0
     return results
 
