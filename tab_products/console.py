@@ -9,8 +9,8 @@ from IPython import embed
 data_dir     = "data/tab_products/images_ss"
 log_dir      = "log/tab_products/current"
 batch_size   = 20   # min-batch size
-img_width    = 64   # original image width
-img_height   = 64   # original image height
+img_width    = 48   # original image width
+img_height   = 48   # original image height
 img_channel  = 1    # original image channel
 category_dim = 213  # master category nums
 learn_rate   = 1e-4
