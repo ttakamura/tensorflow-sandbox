@@ -21,7 +21,7 @@ with tf.Session(conf.remote_host_uri()) as sess:
   images        = tf.placeholder(tf.float32, shape=[None, img_height, img_width, img_channel], name='images')
   labels        = tf.placeholder(tf.int64,   shape=[None], name='labels')
 
-  logits    = model.small_model(images, batch_size, img_channel, category_dim, dropout_ratio)
+  logits    = model.small_model(images, img_channel, category_dim, dropout_ratio)
   train_opt = trainer.optimizer(logits, labels, learn_rate, global_step)
   accuracy  = trainer.evaluater(logits, labels)
 
