@@ -31,21 +31,24 @@ with tf.Session(conf.remote_host_uri()) as sess:
   summary_writer = tf.train.SummaryWriter(log_dir, sess.graph)
 
   # -------- train ------------------------------------------
-
   train, valid, test = reader.open_data(data_dir, batch_size)
 
   # embed()
 
-  for step in xrange(3):
+  for step in xrange(100):
     for i in xrange(len(train)):
       train_data = reader.feed_dict(data_dir, train[i], 0.5, images, labels, dropout_ratio)
       sess.run(train_opt, feed_dict=train_data)
 
-      if (i % 500 == 0):
-        summary_str = sess.run(summary_op, feed_dict=train_data)
-        summary_writer.add_summary(summary_str)
-        summary_writer.flush()
+      #if (i % 500 == 0):
+      #  summary_str = sess.run(summary_op, feed_dict=train_data)
+      #  summary_writer.add_summary(summary_str)
+      #  summary_writer.flush()
 
     valid_data = reader.feed_dict(data_dir, valid, 1.0, images, labels, dropout_ratio)
     acc_score  = sess.run(accuracy, feed_dict=valid_data)
     print("step %d, accuracy %g" % (step, acc_score))
+
+    summary_str = sess.run(summary_op, feed_dict=train_data)
+    summary_writer.add_summary(summary_str, step)
+    summary_writer.flush()
