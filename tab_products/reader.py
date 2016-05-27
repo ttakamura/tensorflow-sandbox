@@ -22,8 +22,8 @@ def split_batches(batches):
     test_size  = total_size
     np.random.shuffle(batches)
     train_batches = batches[0:train_size]
-    valid_batches = batches[train_size:valid_size]
-    test_batches  = batches[valid_size:test_size]
+    valid_batches = batches[train_size:valid_size].reshape(-1, 3)
+    test_batches  = batches[valid_size:test_size].reshape(-1, 3)
     return train_batches, valid_batches, test_batches
 
 def load_images(dir_path, batch):
@@ -38,3 +38,9 @@ def load_images(dir_path, batch):
 def get_categories(batch):
     # batch = [second_category, third_category, id]
     return batch[:,0]
+
+def feed_dict(data_dir, batch, dropout_ratio_value, images, labels, dropout_ratio):
+  x    = load_images(data_dir, batch)
+  t    = get_categories(batch)
+  feed = {images: x, labels: t, dropout_ratio: dropout_ratio_value}
+  return feed
