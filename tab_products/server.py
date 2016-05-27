@@ -6,3 +6,4 @@
 import tensorflow as tf
 cluster = tf.train.ClusterSpec({"tomato": ["localhost:8888"]})
 server  = tf.train.Server(cluster, job_name="tomato", task_index=0)
+server.join()
