@@ -27,20 +27,17 @@ def fc_layer(x, input_dim, output_dim):
   h = tf.matmul(x, W) + b
   return W, b, h
 
-def small_model(x_image, input_channel, output_dim, dropout_ratio):
-  crop_width      = 48
-  crop_height     = 48
-  c1_channel      = 32
-  c1_width        = crop_width / 2
-  c1_height       = crop_height / 2
-  c2_channel      = 64
-  c2_width        = c1_width / 2
-  c2_height       = c1_height / 2
-  fc1_dim         = 192
-  x_image_cropped = tf.random_crop(x_image, tf.pack([tf.shape(x_image)[0], crop_height, crop_width, input_channel]))
+def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio):
+  c1_channel = 32
+  c1_width   = width / 2
+  c1_height  = height / 2
+  c2_channel = 64
+  c2_width   = c1_width / 2
+  c2_height  = c1_height / 2
+  fc1_dim    = 192
 
   with tf.variable_scope('conv1') as scope:
-    W_conv1, b_conv1, h_conv1, h_pool1 = conv_and_max_pool_layer(x_image_cropped, input_channel, c1_channel)
+    W_conv1, b_conv1, h_conv1, h_pool1 = conv_and_max_pool_layer(x_image, input_channel, c1_channel)
 
   with tf.variable_scope('conv2') as scope:
     W_conv2, b_conv2, h_conv2, h_pool2 = conv_and_max_pool_layer(h_pool1, c1_channel, c2_channel)
