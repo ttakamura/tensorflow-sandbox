@@ -7,11 +7,11 @@ import reader
 import trainer
 from IPython import embed
 
-data_dir     = "data/tab_products/images_mm"
+data_dir     = "data/tab_products/images_ss"
 log_dir      = ("log/tab_products/%s" % int(time.time()))
-batch_size   = 50   # min-batch size
-img_width    = 96   # original image width
-img_height   = 96   # original image height
+batch_size   = 100  # min-batch size
+img_width    = 48   # original image width
+img_height   = 48   # original image height
 img_channel  = 1    # original image channel
 category_dim = 213  # master category nums
 learn_rate   = 1e-4
