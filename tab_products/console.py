@@ -31,6 +31,9 @@ with tf.Session(conf.remote_host_uri()) as sess:
   summary_op     = tf.merge_all_summaries()
   summary_writer = tf.train.SummaryWriter(log_dir, sess.graph)
 
+  training_accuracy_summary   = tf.scalar_summary("training_accuracy", accuracy)
+  validation_accuracy_summary = tf.scalar_summary("validation_accuracy", accuracy)
+
   # -------- train ------------------------------------------
   train, valid, test = reader.open_data(data_dir, batch_size)
 
@@ -43,14 +46,17 @@ with tf.Session(conf.remote_host_uri()) as sess:
       train_data = reader.feed_dict(data_dir, train[i], 0.5, images, labels, dropout_ratio)
       sess.run(train_opt, feed_dict=train_data)
 
+      main_summary = sess.run(summary_op, feed_dict=train_data)
+      summary_writer.add_summary(main_summary, step)
+
       if (step % 10 == 0):
-        train_summary = sess.run(summary_op, feed_dict=train_data)
-        summary_writer.add_summary(train_summary, step)
+        train_data = reader.feed_dict(data_dir, train[i], 1.0, images, labels, dropout_ratio)
+        valid_data = reader.feed_dict(data_dir, valid,    1.0, images, labels, dropout_ratio)
 
-        valid_data = reader.feed_dict(data_dir, valid, 1.0, images, labels, dropout_ratio)
-        acc_score  = sess.run(accuracy, feed_dict=valid_data)
-        print("step %d, accuracy %g" % (step, acc_score))
+        valid_acc_score, valid_acc_summary = sess.run([accuracy, validation_accuracy_summary], feed_dict=valid_data)
+        train_acc_score, train_acc_summary = sess.run([accuracy, training_accuracy_summary], feed_dict=train_data)
+        print("step %d, valid accuracy %g, train accuracy %g" % (step, valid_acc_score, train_acc_score))
 
-        validate_summary = sess.run(summary_op, feed_dict=valid_data)
-        summary_writer.add_summary(validate_summary, step)
+        summary_writer.add_summary(valid_acc_summary, step)
+        summary_writer.add_summary(train_acc_summary, step)
         summary_writer.flush()
