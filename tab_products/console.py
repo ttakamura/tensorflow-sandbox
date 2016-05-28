@@ -7,7 +7,7 @@ import reader
 import trainer
 from IPython import embed
 
-data_dir     = "data/tab_products/images_ss"
+data_dir     = "data/tab_products/images_s"
 log_dir      = ("log/tab_products/%s" % int(time.time()))
 batch_size   = 100  # min-batch size
 img_width    = 48   # original image width
