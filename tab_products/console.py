@@ -43,7 +43,7 @@ with tf.Session(conf.remote_host_uri()) as sess:
       train_data = reader.feed_dict(data_dir, train[i], 0.5, images, labels, dropout_ratio)
       sess.run(train_opt, feed_dict=train_data)
 
-      if (step % 100 == 0):
+      if (step % 10 == 0):
         train_summary = sess.run(summary_op, feed_dict=train_data)
         summary_writer.add_summary(train_summary, step)
 
