@@ -1,3 +1,4 @@
+import os
 import time
 import numpy as np
 import tensorflow as tf
@@ -11,7 +12,7 @@ image_set    = "images_ss"
 model_type   = "small_v1"
 model_name   = ("%s_%s" % (image_set, model_type))
 data_dir     = ("data/tab_products/%s" % image_set)
-model_dir    = ("model/tab_products/%s" % model_name)
+model_dir    = ("models/tab_products/%s" % (model_name))
 log_dir      = ("log/tab_products/%s" % model_name)
 batch_size   = 100  # min-batch size
 img_width    = 48   # original image width
@@ -25,7 +26,7 @@ def load_model(images, saver, sess):
   ckpt   = tf.train.get_checkpoint_state(model_dir)
   if ckpt:
     last_model = ckpt.model_checkpoint_path
-    print("Reading model parameters from %s" % last_model)
+    print("Reading model parameters from '%s'" % last_model)
     saver.restore(sess, last_model)
   else:
     print("Created model with fresh parameters.")
@@ -78,5 +79,5 @@ with tf.Session(conf.remote_host_uri()) as sess:
         summary_writer.add_summary(train_acc_summary, step)
         summary_writer.flush()
 
-        checkpoint_path = os.path.join(model_dir, "model.ckpt")
+        checkpoint_path = os.path.join(model_dir, 'model.ckpt')
         saver.save(sess, checkpoint_path, global_step=step)
