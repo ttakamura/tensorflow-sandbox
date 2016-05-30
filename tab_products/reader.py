@@ -22,8 +22,8 @@ def split_batches(batches):
     test_size  = total_size
     np.random.shuffle(batches)
     train_batches = batches[0:train_size]
-    valid_batches = batches[train_size:valid_size].reshape(-1, 3)[0:300]
-    test_batches  = batches[valid_size:test_size][0].reshape(-1, 3)[0:300]
+    valid_batches = batches[train_size:valid_size].reshape(-1, 3)[0:1000]
+    test_batches  = batches[valid_size:test_size][0].reshape(-1, 3)[0:1000]
     print(train_batches.shape)
     print(valid_batches.shape)
     print(test_batches.shape)
