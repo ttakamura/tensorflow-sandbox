@@ -21,7 +21,8 @@ img_height   = 48   # original image height
 img_channel  = 1    # original image channel
 category_dim = 213  # master category nums
 learn_rate   = 1e-4
-num_epoch    = 10
+num_epoch    = 1000
+report_step  = 50
 
 def load_model(images, saver, sess):
   logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
@@ -73,13 +74,13 @@ with tf.Session() as sess:
       main_summary = sess.run(summary_op, feed_dict=train_data)
       summary_writer.add_summary(main_summary, step)
 
-      if (step % 10 == 0):
+      if (step % report_step == 0):
         train_data = reader.feed_dict(data_dir, train[i], 1.0, images, labels, dropout_ratio)
         valid_data = reader.feed_dict(data_dir, valid,    1.0, images, labels, dropout_ratio)
 
         valid_acc_score, valid_acc_summary = sess.run([accuracy, validation_accuracy_summary], feed_dict=valid_data)
         train_acc_score, train_acc_summary = sess.run([accuracy, training_accuracy_summary], feed_dict=train_data)
-        print("step %d, valid accuracy %g, train accuracy %g" % (step, valid_acc_score, train_acc_score))
+        print("epoch %d, step %d, valid accuracy %g, train accuracy %g" % (epoch, step, valid_acc_score, train_acc_score))
 
         summary_writer.add_summary(valid_acc_summary, step)
         summary_writer.add_summary(train_acc_summary, step)
