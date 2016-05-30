@@ -20,6 +20,7 @@ img_height   = 48   # original image height
 img_channel  = 1    # original image channel
 category_dim = 213  # master category nums
 learn_rate   = 1e-4
+num_epoch    = 10
 
 def load_model(images, saver, sess):
   logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
@@ -59,7 +60,7 @@ with tf.Session() as sess:
   # from IPython import embed
   # embed()
 
-  for epoch in range(100):
+  for epoch in range(num_epoch):
     for i in range(len(train)):
       step = tf.train.global_step(sess, global_step)
 
