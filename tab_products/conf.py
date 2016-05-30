@@ -3,5 +3,5 @@ import re
 import os
 
 def remote_host_uri():
-  host = re.match(r"tcp://(.+):", os.environ['DOCKER_HOST']).group(1)
+  host = os.environ['TF_HOST']
   return ("grpc://%s:8888" % host)

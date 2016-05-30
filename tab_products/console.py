@@ -80,4 +80,4 @@ with tf.Session(conf.remote_host_uri()) as sess:
         summary_writer.flush()
 
         checkpoint_path = os.path.join(model_dir, 'model.ckpt')
-        saver.save(sess, checkpoint_path, global_step=step)
+        # saver.save(sess, checkpoint_path, global_step=step)
