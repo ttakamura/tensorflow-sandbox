@@ -60,23 +60,27 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
   res_channel = 64
 
   # 12px * 64ch
-  for i in range(2):
-    with tf.variable_scope('resnet_a_%d_1' % i) as scope:
-      _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
-    with tf.variable_scope('resnet_a_%d_2' % i) as scope:
-      _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+  with tf.variable_scope('resnet_a') as scope:
+    for i in range(2):
+      with tf.variable_scope('%d_1' % i) as scope:
+        _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+      with tf.variable_scope('%d_2' % i) as scope:
+        _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+    with tf.variable_scope('conv') as scope:
+      _, _, h_res = conv_layer(h_res, 3, 2, res_channel, int(res_channel*2))
 
-  _, _, h_res = conv_layer(h_res, 3, 2, res_channel, int(res_channel*2))
   res_channel = 128
 
   # 6px * 128ch
-  for i in range(2):
-    with tf.variable_scope('resnet_b_%d_1' % i) as scope:
-      _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
-    with tf.variable_scope('resnet_b_%d_2' % i) as scope:
-      _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+  with tf.variable_scope('resnet_b') as scope:
+    for i in range(2):
+      with tf.variable_scope('%d_1' % i) as scope:
+        _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+      with tf.variable_scope('%d_2' % i) as scope:
+        _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+    with tf.variable_scope('conv') as scope:
+      _, _, h_res = conv_layer(h_res, 3, 2, res_channel, int(res_channel * 2))
 
-  _, _, h_res = conv_layer(h_res, 3, 2, res_channel, int(res_channel * 2))
   res_channel = 256
 
   # 3px * 256ch
