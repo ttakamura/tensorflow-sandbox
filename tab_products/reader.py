@@ -29,7 +29,7 @@ def split_batches(batches):
 def load_images(dir_path, batch):
     results = []
     for id in batch[:,2]:
-        path = "/app/sandbox/%s/%s.jpg" % (dir_path, id)
+        path = "%s/%s.jpg" % (dir_path, id)
         img = np.array(Image.open(path).convert("L"), 'f')
         w, h = img.shape
         results.append(img.reshape((w, h, 1)))

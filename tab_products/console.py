@@ -7,6 +7,7 @@ import conf
 import model
 import reader
 import trainer
+import time
 
 image_set    = "images_ss"
 model_type   = "small_v1"
@@ -14,7 +15,7 @@ model_name   = ("%s_%s" % (image_set, model_type))
 data_dir     = ("data/tab_products/%s" % image_set)
 model_dir    = ("models/tab_products/%s" % (model_name))
 log_dir      = ("log/tab_products/%s" % model_name)
-batch_size   = 100  # min-batch size
+batch_size   = 200  # min-batch size
 img_width    = 48   # original image width
 img_height   = 48   # original image height
 img_channel  = 1    # original image channel
@@ -60,6 +61,8 @@ with tf.Session() as sess:
   # from IPython import embed
   # embed()
 
+  start_time = time.time()
+
   for epoch in range(num_epoch):
     for i in range(len(train)):
       step = tf.train.global_step(sess, global_step)
@@ -84,3 +87,6 @@ with tf.Session() as sess:
 
         checkpoint_path = os.path.join(model_dir, 'model.ckpt')
         # saver.save(sess, checkpoint_path, global_step=step)
+
+  end_time = time.time()
+  print("Total time is %s" % (end_time - start_time))
