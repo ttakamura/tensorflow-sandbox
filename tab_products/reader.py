@@ -17,9 +17,10 @@ def make_batch(data_list, batch_size):
 
 def split_batches(batches):
     total_size = batches.shape[0]
-    train_size = total_size * 60 // 100
-    valid_size = total_size * 80 // 100
+    train_size = total_size * 90 // 100
+    valid_size = total_size * 95 // 100
     test_size  = total_size
+    print("train_size:%d, valid_size:%d, test_size:%d" % (train_size, (valid_size - train_size), (test_size - valid_size)))
     np.random.shuffle(batches)
     train_batches = batches[0:train_size]
     valid_batches = batches[train_size:valid_size].reshape(-1, 3)

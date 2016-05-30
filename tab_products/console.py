@@ -1,28 +1,31 @@
 from PIL import Image
 import os
+import sys
 import time
 import numpy as np
 import tensorflow as tf
+
 import conf
 import model
 import reader
 import trainer
+import predicter
 import time
 
-image_set    = "images_ss"
+image_set    = os.environ['IMGSET'] # "images_s"
 model_type   = "small_v1"
 model_name   = ("%s_%s" % (image_set, model_type))
 data_dir     = ("data/tab_products/%s" % image_set)
 model_dir    = ("models/tab_products/%s" % (model_name))
 log_dir      = ("log/tab_products/%s" % model_name)
-batch_size   = 200  # min-batch size
+batch_size   = 100  # min-batch size
 img_width    = 48   # original image width
 img_height   = 48   # original image height
 img_channel  = 1    # original image channel
 category_dim = 213  # master category nums
 learn_rate   = 1e-4
 num_epoch    = 1000
-report_step  = 50
+report_step  = 100
 
 def load_model(images, saver, sess):
   logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
@@ -59,8 +62,10 @@ with tf.Session() as sess:
   # -------- train ------------------------------------------
   train, valid, test = reader.open_data(data_dir, batch_size)
 
-  # from IPython import embed
-  # embed()
+  if os.environ['DEBUG'] == '1':
+    from IPython import embed
+    embed()
+    sys.exit()
 
   start_time = time.time()
 
