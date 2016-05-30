@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 import conf
-import model
+import resnet_model
 import reader
 import trainer
 import predicter
@@ -28,7 +28,7 @@ num_epoch    = 1000
 report_step  = 100
 
 def load_model(images, saver, sess):
-  logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
+  logits = resnet_model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
   ckpt   = tf.train.get_checkpoint_state(model_dir)
   if ckpt:
     last_model = ckpt.model_checkpoint_path
