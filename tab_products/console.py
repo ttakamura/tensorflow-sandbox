@@ -94,7 +94,7 @@ with tf.Session() as sess:
         checkpoint_path = os.path.join(model_dir, 'model.ckpt')
         saver.save(sess, checkpoint_path, global_step=step)
 
-        predicter.predict(sess, logits, images, labels, data_dir, valid, dropout_ratio)
+        # predicter.predict(sess, logits, images, labels, data_dir, valid, dropout_ratio)
 
   end_time = time.time()
   print("Total time is %s" % (end_time - start_time))
