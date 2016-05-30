@@ -17,14 +17,16 @@ def make_batch(data_list, batch_size):
 
 def split_batches(batches):
     total_size = batches.shape[0]
-    train_size = total_size * 90 // 100
-    valid_size = total_size * 95 // 100
+    train_size = total_size * 80 // 100
+    valid_size = total_size * 90 // 100
     test_size  = total_size
-    print("train_size:%d, valid_size:%d, test_size:%d" % (train_size, (valid_size - train_size), (test_size - valid_size)))
     np.random.shuffle(batches)
     train_batches = batches[0:train_size]
-    valid_batches = batches[train_size:valid_size].reshape(-1, 3)
-    test_batches  = batches[valid_size:test_size].reshape(-1, 3)
+    valid_batches = batches[train_size:valid_size].reshape(-1, 3)[0:100]
+    test_batches  = batches[valid_size:test_size][0].reshape(-1, 3)[0:100]
+    print(train_batches.shape)
+    print(valid_batches.shape)
+    print(test_batches.shape)
     return train_batches, valid_batches, test_batches
 
 def load_images(dir_path, batch):
