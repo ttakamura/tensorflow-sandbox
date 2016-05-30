@@ -42,7 +42,7 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
   with tf.variable_scope('conv2') as scope:
     W_conv2, b_conv2, h_conv2, h_pool2 = conv_and_max_pool_layer(h_pool1, c1_channel, c2_channel)
 
-  h_pool2_dim  = c2_width * c2_height * c2_channel
+  h_pool2_dim  = int(c2_width * c2_height * c2_channel)
   h_pool2_flat = tf.reshape(h_pool2, [-1, h_pool2_dim])
 
   with tf.variable_scope('fc1') as scope:

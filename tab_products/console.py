@@ -1,3 +1,4 @@
+from PIL import Image
 import os
 import time
 import numpy as np
@@ -6,7 +7,6 @@ import conf
 import model
 import reader
 import trainer
-from IPython import embed
 
 image_set    = "images_ss"
 model_type   = "small_v1"
@@ -33,7 +33,8 @@ def load_model(images, saver, sess):
     sess.run(tf.initialize_all_variables())
   return logits
 
-with tf.Session(conf.remote_host_uri()) as sess:
+# with tf.Session(conf.remote_host_uri()) as sess:
+with tf.Session() as sess:
   global_step   = tf.Variable(0, name='global_step', trainable=False)
   dropout_ratio = tf.placeholder(tf.float32, name='dropout_ratio')
   images        = tf.placeholder(tf.float32, shape=[None, img_height, img_width, img_channel], name='images')
@@ -55,10 +56,11 @@ with tf.Session(conf.remote_host_uri()) as sess:
   # -------- train ------------------------------------------
   train, valid, test = reader.open_data(data_dir, batch_size)
 
+  # from IPython import embed
   # embed()
 
-  for epoch in xrange(100):
-    for i in xrange(len(train)):
+  for epoch in range(100):
+    for i in range(len(train)):
       step = tf.train.global_step(sess, global_step)
 
       train_data = reader.feed_dict(data_dir, train[i], 0.5, images, labels, dropout_ratio)
