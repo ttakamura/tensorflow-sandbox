@@ -12,26 +12,15 @@ import trainer
 import predicter
 import time
 
-image_set    = os.environ['IMGSET'] # "images_s"
-model_type   = "small_v1"
-model_name   = ("%s_%s" % (image_set, model_type))
-data_dir     = ("data/tab_products/%s" % image_set)
-model_dir    = ("models/tab_products/%s" % (model_name))
-log_dir      = ("log/tab_products/%s_%d" % (model_name, int(time.time())))
-batch_size   = 100  # min-batch size
-img_width    = 48   # original image width
-img_height   = 48   # original image height
-img_channel  = 1    # original image channel
-category_dim = 213  # master category nums
-learn_rate   = 1e-3
-num_epoch    = 1000
-report_step  = 50
+FLAGS = tf.app.flags.FLAGS
+
+tf.app.flags.DEFINE_string('image_set', 'images_s', "利用する画像セット")
+tf.app.flags.DEFINE_string('mode',      'train',    "train, console or predict")
 
 def load_model(images, saver, sess):
   logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
-  # ckpt   = tf.train.get_checkpoint_state(model_dir)
-  ckpt = False
-  if ckpt:
+  ckpt   = tf.train.get_checkpoint_state(model_dir)
+  if ckpt and FLAGS.mode != 'train':
     last_model = ckpt.model_checkpoint_path
     print("Reading model parameters from '%s'" % last_model)
     saver.restore(sess, last_model)
@@ -40,62 +29,81 @@ def load_model(images, saver, sess):
     sess.run(tf.initialize_all_variables())
   return logits
 
-# with tf.Session(conf.remote_host_uri()) as sess:
-with tf.Session() as sess:
-  global_step   = tf.Variable(0, name='global_step', trainable=False)
-  dropout_ratio = tf.placeholder(tf.float32, name='dropout_ratio')
-  images        = tf.placeholder(tf.float32, shape=[None, img_height, img_width, img_channel], name='images')
-  labels        = tf.placeholder(tf.int64,   shape=[None], name='labels')
-  saver         = tf.train.Saver(max_to_keep=10)
+def main(argv=None):
+  image_set    = FLAGS.image_set
+  model_type   = "small_v1"
+  model_name   = ("%s_%s" % (image_set, model_type))
+  data_dir     = ("data/tab_products/%s" % image_set)
+  model_dir    = ("models/tab_products/%s" % (model_name))
+  log_dir      = ("log/tab_products/%s_%d" % (model_name, int(time.time())))
+  batch_size   = 100  # min-batch size
+  img_width    = 48   # original image width
+  img_height   = 48   # original image height
+  img_channel  = 1    # original image channel
+  category_dim = 213  # master category nums
+  learn_rate   = 1e-3
+  num_epoch    = 1000
+  report_step  = 50
 
-  logits    = load_model(images, saver, sess)
-  train_opt = trainer.optimizer(logits, labels, learn_rate, global_step)
-  accuracy  = trainer.evaluater(logits, labels)
+  # with tf.Session(conf.remote_host_uri()) as sess:
+  with tf.Session() as sess:
+    global_step   = tf.Variable(0, name='global_step', trainable=False)
+    dropout_ratio = tf.placeholder(tf.float32, name='dropout_ratio')
+    images        = tf.placeholder(tf.float32, shape=[None, img_height, img_width, img_channel], name='images')
+    labels        = tf.placeholder(tf.int64,   shape=[None], name='labels')
+    saver         = tf.train.Saver(max_to_keep=10)
 
-  sess.run(tf.initialize_all_variables())
+    logits    = load_model(images, saver, sess)
+    train_opt = trainer.optimizer(logits, labels, learn_rate, global_step)
+    accuracy  = trainer.evaluater(logits, labels)
 
-  summary_op     = tf.merge_all_summaries()
-  summary_writer = tf.train.SummaryWriter(log_dir, sess.graph)
+    sess.run(tf.initialize_all_variables())
 
-  training_accuracy_summary   = tf.scalar_summary("training_accuracy", accuracy)
-  validation_accuracy_summary = tf.scalar_summary("validation_accuracy", accuracy)
+    summary_op     = tf.merge_all_summaries()
+    summary_writer = tf.train.SummaryWriter(log_dir, sess.graph)
 
-  # -------- train ------------------------------------------
-  train, valid, test = reader.open_data(data_dir, batch_size)
+    training_accuracy_summary   = tf.scalar_summary("training_accuracy", accuracy)
+    validation_accuracy_summary = tf.scalar_summary("validation_accuracy", accuracy)
 
-  if os.environ['DEBUG'] == '1':
-    from IPython import embed
-    embed()
-    sys.exit()
+    # -------- train ------------------------------------------
+    train, valid, test = reader.open_data(data_dir, batch_size)
 
-  start_time = time.time()
+    if FLAGS.mode == 'console':
+      from IPython import embed
+      embed()
+      sys.exit()
 
-  for epoch in range(num_epoch):
-    for i in range(len(train)):
-      step = tf.train.global_step(sess, global_step)
+    start_time = time.time()
 
-      train_data = reader.feed_dict(data_dir, train[i], 0.5, images, labels, dropout_ratio)
-      sess.run(train_opt, feed_dict=train_data)
+    for epoch in range(num_epoch):
+      for i in range(len(train)):
+        step = tf.train.global_step(sess, global_step)
 
-      main_summary = sess.run(summary_op, feed_dict=train_data)
-      summary_writer.add_summary(main_summary, step)
+        train_data = reader.feed_dict(data_dir, train[i], 0.5, images, labels, dropout_ratio)
+        sess.run(train_opt, feed_dict=train_data)
 
-      if (step % report_step == 0):
-        train_data = reader.feed_dict(data_dir, train[i], 1.0, images, labels, dropout_ratio)
-        valid_data = reader.feed_dict(data_dir, valid,    1.0, images, labels, dropout_ratio)
+        main_summary = sess.run(summary_op, feed_dict=train_data)
+        summary_writer.add_summary(main_summary, step)
 
-        valid_acc_score, valid_acc_summary = sess.run([accuracy, validation_accuracy_summary], feed_dict=valid_data)
-        train_acc_score, train_acc_summary = sess.run([accuracy, training_accuracy_summary], feed_dict=train_data)
-        print("epoch %d, step %d, valid accuracy %g, train accuracy %g" % (epoch, step, valid_acc_score, train_acc_score))
+        if (step % report_step == 0):
+          train_data = reader.feed_dict(data_dir, train[i], 1.0, images, labels, dropout_ratio)
+          valid_data = reader.feed_dict(data_dir, valid,    1.0, images, labels, dropout_ratio)
 
-        summary_writer.add_summary(valid_acc_summary, step)
-        summary_writer.add_summary(train_acc_summary, step)
-        summary_writer.flush()
+          valid_acc_score, valid_acc_summary = sess.run([accuracy, validation_accuracy_summary], feed_dict=valid_data)
+          train_acc_score, train_acc_summary = sess.run([accuracy, training_accuracy_summary], feed_dict=train_data)
+          print("epoch %d, step %d, valid accuracy %g, train accuracy %g" % (epoch, step, valid_acc_score, train_acc_score))
 
-        checkpoint_path = os.path.join(model_dir, 'model.ckpt')
-        saver.save(sess, checkpoint_path, global_step=step)
+          summary_writer.add_summary(valid_acc_summary, step)
+          summary_writer.add_summary(train_acc_summary, step)
+          summary_writer.flush()
 
-        # predicter.predict(sess, logits, images, labels, data_dir, valid, dropout_ratio)
+          checkpoint_path = os.path.join(model_dir, 'model.ckpt')
+          saver.save(sess, checkpoint_path, global_step=step)
 
-  end_time = time.time()
-  print("Total time is %s" % (end_time - start_time))
+          # predicter.predict(sess, logits, images, labels, data_dir, valid, dropout_ratio)
+
+    end_time = time.time()
+    print("Total time is %s" % (end_time - start_time))
+
+if __name__ == '__main__':
+  tf.app.run()
