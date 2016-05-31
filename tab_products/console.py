@@ -14,10 +14,11 @@ import time
 
 FLAGS = tf.app.flags.FLAGS
 
-tf.app.flags.DEFINE_string('image_set', 'images_s', "利用する画像セット")
-tf.app.flags.DEFINE_string('mode',      'train',    "train, console or predict")
+tf.app.flags.DEFINE_string('image_set',  'images_s', "利用する画像セット")
+tf.app.flags.DEFINE_string('mode',       'train',    "train, console or predict")
+tf.app.flags.DEFINE_string('model_name', 'temp',     "checkpoint として save & restore される名前")
 
-def load_model(images, saver, sess):
+def load_model(images, saver, sess, model_dir, img_width, img_height, img_channel, category_dim, dropout_ratio):
   logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
   ckpt   = tf.train.get_checkpoint_state(model_dir)
   if ckpt and FLAGS.mode != 'train':
@@ -31,8 +32,7 @@ def load_model(images, saver, sess):
 
 def main(argv=None):
   image_set    = FLAGS.image_set
-  model_type   = "small_v1"
-  model_name   = ("%s_%s" % (image_set, model_type))
+  model_name   = ("%s_%s" % (image_set, FLAGS.model_name))
   data_dir     = ("data/tab_products/%s" % image_set)
   model_dir    = ("models/tab_products/%s" % (model_name))
   log_dir      = ("log/tab_products/%s_%d" % (model_name, int(time.time())))
@@ -45,6 +45,8 @@ def main(argv=None):
   num_epoch    = 1000
   report_step  = 50
 
+  print("Current mode is %s" % FLAGS.mode)
+
   # with tf.Session(conf.remote_host_uri()) as sess:
   with tf.Session() as sess:
     global_step   = tf.Variable(0, name='global_step', trainable=False)
@@ -53,7 +55,7 @@ def main(argv=None):
     labels        = tf.placeholder(tf.int64,   shape=[None], name='labels')
     saver         = tf.train.Saver(max_to_keep=10)
 
-    logits    = load_model(images, saver, sess)
+    logits    = load_model(images, saver, sess, model_dir, img_width, img_height, img_channel, category_dim, dropout_ratio)
     train_opt = trainer.optimizer(logits, labels, learn_rate, global_step)
     accuracy  = trainer.evaluater(logits, labels)
 
@@ -100,7 +102,7 @@ def main(argv=None):
           checkpoint_path = os.path.join(model_dir, 'model.ckpt')
           saver.save(sess, checkpoint_path, global_step=step)
 
-          # predicter.predict(sess, logits, images, labels, data_dir, valid, dropout_ratio)
+      predicter.predict(sess, logits, images, labels, data_dir, valid, dropout_ratio)
 
     end_time = time.time()
     print("Total time is %s" % (end_time - start_time))
