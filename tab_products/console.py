@@ -25,7 +25,7 @@ img_channel  = 1    # original image channel
 category_dim = 213  # master category nums
 learn_rate   = 1e-3
 num_epoch    = 1000
-report_step  = 30
+report_step  = 50
 
 def load_model(images, saver, sess):
   logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
