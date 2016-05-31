@@ -47,7 +47,6 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
   c2_channel = 64
   res_channel_a = 64
   res_channel_b = 128
-  res_channel_last = output_dim # 256
 
   # 48px * 1ch
   with tf.variable_scope('conv1') as scope:
@@ -78,16 +77,13 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
         _, _, h_res = conv_layer(h_res, 3, 1, res_channel_b, res_channel_b)
       with tf.variable_scope('%d_2' % i) as scope:
         _, _, h_res = conv_layer(h_res, 3, 1, res_channel_b, res_channel_b)
-    with tf.variable_scope('conv') as scope:
-      _, _, h_res = conv_layer(h_res, 3, 2, res_channel_b, res_channel_last)
 
-  # 3px * 256ch
+  # 6px * 128ch
   h_avg_pool = avg_pool_layer(h_res)
+  h_avg_pool_dim = res_channel_b
 
-  #h_avg_pool_dim = 256
-  #
-  #with tf.variable_scope('fc1') as scope:
-  #  W_fc1, b_fc1, h_fc1 = fc_layer(h_avg_pool, h_avg_pool_dim, output_dim)
-  h_fc1 = h_avg_pool
+  # 1px * 128ch
+  with tf.variable_scope('fc1') as scope:
+    W_fc1, b_fc1, h_fc1 = fc_layer(h_avg_pool, h_avg_pool_dim, output_dim)
 
   return h_fc1
