@@ -19,9 +19,8 @@ tf.app.flags.DEFINE_string('image_set',  'images_s', "利用する画像セッ�
 tf.app.flags.DEFINE_string('mode',       'train',    "train, console or predict")
 tf.app.flags.DEFINE_string('model_name', 'temp',     "checkpoint として save & restore される名前")
 
-def load_model(images, saver, sess, model_dir, img_width, img_height, img_channel, category_dim, dropout_ratio):
-  logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
-  ckpt   = tf.train.get_checkpoint_state(model_dir)
+def restore_or_init_model(model_dir, saver, sess):
+  ckpt = tf.train.get_checkpoint_state(model_dir)
   if ckpt and FLAGS.mode != 'train':
     last_model = ckpt.model_checkpoint_path
     print("Reading model parameters from '%s'" % last_model)
@@ -29,7 +28,6 @@ def load_model(images, saver, sess, model_dir, img_width, img_height, img_channe
   else:
     print("Created model with fresh parameters.")
     sess.run(tf.initialize_all_variables())
-  return logits
 
 def main(argv=None):
   image_set    = FLAGS.image_set
@@ -58,11 +56,9 @@ def main(argv=None):
     labels        = tf.placeholder(tf.int64,   shape=[None], name='labels')
     saver         = tf.train.Saver(max_to_keep=10)
 
-    logits    = load_model(images, saver, sess, model_dir, img_width, img_height, img_channel, category_dim, dropout_ratio)
+    logits    = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
     train_opt = trainer.optimizer(logits, labels, learn_rate, global_step)
     accuracy  = trainer.evaluater(logits, labels)
-
-    sess.run(tf.initialize_all_variables())
 
     summary_op     = tf.merge_all_summaries()
     summary_writer = tf.train.SummaryWriter(log_dir, sess.graph)
@@ -71,6 +67,8 @@ def main(argv=None):
     validation_accuracy_summary = tf.scalar_summary("validation_accuracy", accuracy)
 
     # -------- train ------------------------------------------
+    restore_or_init_model(model_dir, saver, sess)
+
     train, valid, test = reader.open_data(data_dir, batch_size)
 
     if FLAGS.mode == 'console':
