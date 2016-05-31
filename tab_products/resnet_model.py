@@ -39,15 +39,15 @@ def fc_layer(x, input_dim, output_dim):
   return W, b, h
 
 def avg_pool_layer(x):
-  h = tf.reduce_mean(x, reduction_indices=[1, 2], name="avg_pool")
-  print(x)
-  print(h)
-  return h
+  return tf.reduce_mean(x, reduction_indices=[1, 2], name="avg_pool")
 
 # --------------------------------------------------------------------------------
 def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio):
   c1_channel = 32
   c2_channel = 64
+  res_channel_a = 64
+  res_channel_b = 128
+  res_channel_last = output_dim # 256
 
   # 48px * 1ch
   with tf.variable_scope('conv1') as scope:
@@ -60,37 +60,34 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
     h_pool2 = max_pool_layer(h_conv2, 3, 2)
 
   h_res = h_pool2
-  res_channel = 64
 
   # 12px * 64ch
   with tf.variable_scope('resnet_a') as scope:
     for i in range(2):
       with tf.variable_scope('%d_1' % i) as scope:
-        _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+        _, _, h_res = conv_layer(h_res, 3, 1, res_channel_a, res_channel_a)
       with tf.variable_scope('%d_2' % i) as scope:
-        _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+        _, _, h_res = conv_layer(h_res, 3, 1, res_channel_a, res_channel_a)
     with tf.variable_scope('conv') as scope:
-      _, _, h_res = conv_layer(h_res, 3, 2, res_channel, int(res_channel*2))
-
-  res_channel = 128
+      _, _, h_res = conv_layer(h_res, 3, 2, res_channel_a, res_channel_b)
 
   # 6px * 128ch
   with tf.variable_scope('resnet_b') as scope:
     for i in range(2):
       with tf.variable_scope('%d_1' % i) as scope:
-        _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+        _, _, h_res = conv_layer(h_res, 3, 1, res_channel_b, res_channel_b)
       with tf.variable_scope('%d_2' % i) as scope:
-        _, _, h_res = conv_layer(h_res, 3, 1, res_channel, res_channel)
+        _, _, h_res = conv_layer(h_res, 3, 1, res_channel_b, res_channel_b)
     with tf.variable_scope('conv') as scope:
-      _, _, h_res = conv_layer(h_res, 3, 2, res_channel, int(res_channel * 2))
-
-  res_channel = 256
+      _, _, h_res = conv_layer(h_res, 3, 2, res_channel_b, res_channel_last)
 
   # 3px * 256ch
   h_avg_pool = avg_pool_layer(h_res)
-  h_avg_pool_dim = 256
 
-  with tf.variable_scope('fc1') as scope:
-    W_fc1, b_fc1, h_fc1 = fc_layer(h_avg_pool, h_avg_pool_dim, output_dim)
+  #h_avg_pool_dim = 256
+  #
+  #with tf.variable_scope('fc1') as scope:
+  #  W_fc1, b_fc1, h_fc1 = fc_layer(h_avg_pool, h_avg_pool_dim, output_dim)
+  h_fc1 = h_avg_pool
 
   return h_fc1
