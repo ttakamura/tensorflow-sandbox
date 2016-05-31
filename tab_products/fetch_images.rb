@@ -1,10 +1,4 @@
 # coding: utf-8
-#
-# tools02 などで下記を実行して TSV を準備する
-#
-# rails r 'Product.find_each{|pd| puts [pd.id, pd.main_image.url, (pd.categories||[]).join("|")].join("\t") }' | tee /tmp/products.tsv
-# scp で持ってくる
-#
 require 'thread'
 
 @queue = Queue.new

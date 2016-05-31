@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from PIL import Image
 import os
 import sys
@@ -45,7 +46,9 @@ def main(argv=None):
   num_epoch    = 1000
   report_step  = 50
 
-  print("Current mode is %s" % FLAGS.mode)
+  print("Boot with ... mode: %s, model_name: %s" % (FLAGS.mode, model_name))
+  if not os.path.exists(model_dir):
+    os.mkdir(model_dir)
 
   # with tf.Session(conf.remote_host_uri()) as sess:
   with tf.Session() as sess:
