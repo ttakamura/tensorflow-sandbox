@@ -1,11 +1,14 @@
 import tensorflow as tf
 
-def weight_variable(shape):
-  initial = tf.truncated_normal(shape, stddev=0.01)
-  return tf.Variable(initial, name='W')
+def weight_variable(shape, wd=None):
+  w = tf.Variable(tf.truncated_normal(shape, stddev=0.01), name='W')
+  if wd is not None:
+    weight_decay = tf.mul(tf.nn.l2_loss(w), wd, name='weight_loss')
+    tf.add_to_collection('losses', weight_decay)
+  return w
 
 def bias_variable(shape):
-  initial = tf.constant(0.001, shape=shape)
+  initial = tf.constant(0.0, shape=shape)
   return tf.Variable(initial, name='b')
 
 def conv2d(x, W, stride):
@@ -23,14 +26,14 @@ def max_pool_layer(x, ksize, stride):
   return tf.nn.max_pool(x, ksize=[1, ksize, ksize, 1], strides=[1, stride, stride, 1], padding='SAME')
 
 def conv_layer(x, ksize, stride, input_channel, output_channel):
-  W = weight_variable([ksize, ksize, input_channel, output_channel])
+  W = weight_variable([ksize, ksize, input_channel, output_channel], wd=None)
   b = bias_variable([output_channel])
   z = conv2d(x, W, stride) + b
   h = tf.nn.relu(batch_normalize(z))
   return W, b, h
 
 def fc_layer(x, input_dim, output_dim):
-  W = weight_variable([input_dim, output_dim])
+  W = weight_variable([input_dim, output_dim], wd=0.01)
   b = bias_variable([output_dim])
   h = tf.matmul(x, W) + b
   return W, b, h
