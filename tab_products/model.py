@@ -50,10 +50,12 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
 
   with tf.variable_scope('conv1') as scope:
     W_conv1, b_conv1, h_conv1 = conv_layer(x_image, input_channel, c1_channel)
+    W_conv1, b_conv1, h_conv1 = conv_layer(h_conv1, c1_channel, c1_channel)
     h_pool1 = max_pool_2x2(h_conv1)
 
   with tf.variable_scope('conv2') as scope:
     W_conv2, b_conv2, h_conv2 = conv_layer(h_pool1, c1_channel, c2_channel)
+    W_conv2, b_conv2, h_conv2 = conv_layer(h_conv2, c2_channel, c2_channel)
     h_pool2 = max_pool_2x2(h_conv2)
 
   h_pool2_dim  = int(c2_width * c2_height * c2_channel)
