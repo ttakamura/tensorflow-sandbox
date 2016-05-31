@@ -23,13 +23,14 @@ img_width    = 48   # original image width
 img_height   = 48   # original image height
 img_channel  = 1    # original image channel
 category_dim = 213  # master category nums
-learn_rate   = 1e-4
+learn_rate   = 1e-3
 num_epoch    = 1000
 report_step  = 100
 
 def load_model(images, saver, sess):
   logits = resnet_model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
-  ckpt   = tf.train.get_checkpoint_state(model_dir)
+  # ckpt   = tf.train.get_checkpoint_state(model_dir)
+  ckpt = False
   if ckpt:
     last_model = ckpt.model_checkpoint_path
     print("Reading model parameters from '%s'" % last_model)
