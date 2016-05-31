@@ -1,11 +1,23 @@
 import tensorflow as tf
 
-def weight_variable(shape):
-  initial = tf.truncated_normal(shape, stddev=0.1)
-  return tf.Variable(initial, name='W')
+def batch_normalize(x):
+  epsilon    = 0.001
+  shape      = x.get_shape()[-1:]
+  scale      = tf.Variable(tf.ones(shape), name='bn_scale')
+  beta       = tf.Variable(tf.zeros(shape), name='bn_beta')
+  mean, vari = tf.nn.moments(x, [0])
+  return tf.nn.batch_normalization(x, mean, vari, beta, scale, epsilon)
+
+def weight_variable(shape, wd=None):
+  initial = tf.truncated_normal(shape, stddev=0.01)
+  w = tf.Variable(initial, name='W')
+  if wd is not None:
+    weight_decay = tf.mul(tf.nn.l2_loss(w), wd, name='weight_loss')
+    tf.add_to_collection('losses', weight_decay)
+  return w
 
 def bias_variable(shape):
-  initial = tf.constant(0.1, shape=shape)
+  initial = tf.constant(0.0, shape=shape)
   return tf.Variable(initial, name='b')
 
 def conv2d(x, W):
@@ -17,21 +29,22 @@ def max_pool_2x2(x):
 def conv_and_max_pool_layer(x, input_channel, output_channel):
   W = weight_variable([5, 5, input_channel, output_channel])
   b = bias_variable([output_channel])
-  h = tf.nn.relu(conv2d(x, W) + b)
+  z = conv2d(x, W) + b
+  h = tf.nn.relu(batch_normalize(z))
   h_pool = max_pool_2x2(h)
   return W, b, h, h_pool
 
 def fc_layer(x, input_dim, output_dim):
-  W = weight_variable([input_dim, output_dim])
+  W = weight_variable([input_dim, output_dim], wd=0.01)
   b = bias_variable([output_dim])
   h = tf.matmul(x, W) + b
   return W, b, h
 
 def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio):
-  c1_channel = 20
+  c1_channel = 32
   c1_width   = width / 2
   c1_height  = height / 2
-  c2_channel = 30
+  c2_channel = 64
   c2_width   = c1_width / 2
   c2_height  = c1_height / 2
   fc1_dim    = 100
@@ -47,7 +60,8 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
 
   with tf.variable_scope('fc1') as scope:
     W_fc1, b_fc1, h_fc1 = fc_layer(h_pool2_flat, h_pool2_dim, fc1_dim)
-    h_fc1_drop = tf.nn.dropout(tf.nn.relu(h_fc1), dropout_ratio)
+    h_fc1_relu = tf.nn.relu(batch_normalize(h_fc1))
+    h_fc1_drop = tf.nn.dropout(h_fc1_relu, dropout_ratio)
 
   with tf.variable_scope('fc2') as scope:
     W_fc2, b_fc2, h_fc2 = fc_layer(h_fc1_drop, fc1_dim, output_dim)

@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 import conf
-import resnet_model
+import model
 import reader
 import trainer
 import predicter
@@ -25,10 +25,10 @@ img_channel  = 1    # original image channel
 category_dim = 213  # master category nums
 learn_rate   = 1e-3
 num_epoch    = 1000
-report_step  = 100
+report_step  = 30
 
 def load_model(images, saver, sess):
-  logits = resnet_model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
+  logits = model.small_model(images, img_width, img_height, img_channel, category_dim, dropout_ratio)
   # ckpt   = tf.train.get_checkpoint_state(model_dir)
   ckpt = False
   if ckpt:
