@@ -33,7 +33,7 @@ def conv_layer(x, ksize, stride, input_channel, output_channel):
   return W, b, h
 
 def fc_layer(x, input_dim, output_dim):
-  W = weight_variable([input_dim, output_dim], wd=0.01)
+  W = weight_variable([input_dim, output_dim], wd=0.05)
   b = bias_variable([output_dim])
   h = tf.matmul(x, W) + b
   return W, b, h
@@ -62,7 +62,7 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
 
   # 12px * 64ch
   with tf.variable_scope('resnet_a') as scope:
-    for i in range(2):
+    for i in range(4):
       with tf.variable_scope('%d_1' % i) as scope:
         _, _, h_res = conv_layer(h_res, 3, 1, res_channel_a, res_channel_a)
       with tf.variable_scope('%d_2' % i) as scope:
@@ -72,7 +72,7 @@ def small_model(x_image, width, height, input_channel, output_dim, dropout_ratio
 
   # 6px * 128ch
   with tf.variable_scope('resnet_b') as scope:
-    for i in range(2):
+    for i in range(4):
       with tf.variable_scope('%d_1' % i) as scope:
         _, _, h_res = conv_layer(h_res, 3, 1, res_channel_b, res_channel_b)
       with tf.variable_scope('%d_2' % i) as scope:
