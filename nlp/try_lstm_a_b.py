@@ -12,7 +12,7 @@ display_step   = 10
 n_input        = 10  # 0 ~ 9
 n_steps        = 28  # timesteps
 n_hidden       = 128 # hidden layer num of features
-n_classes      = 3   # 0 = sin, 1 = tan, 2 =cos
+n_classes      = 10  # 0 ~ 9
 
 # tf Graph input
 x = tf.placeholder("float", [None, n_steps, n_input])
@@ -20,12 +20,10 @@ y = tf.placeholder("float", [None, n_classes])
 
 # Define weights
 weights = {
-    'hidden': tf.Variable(tf.random_normal([n_input, n_hidden])),
-       'out': tf.Variable(tf.random_normal([n_hidden, n_classes]))
+  'out': tf.Variable(tf.random_normal([n_hidden, n_classes]))
 }
 biases = {
-    'hidden': tf.Variable(tf.random_normal([n_hidden])),
-       'out': tf.Variable(tf.random_normal([n_classes]))
+  'out': tf.Variable(tf.random_normal([n_classes]))
 }
 
 def RNN(x, weights, biases):
